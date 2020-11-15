@@ -21,7 +21,7 @@ def variable_value():
 
 	path =  "/media/sf_Fluidity-ubuntu/circledata"
 	vertify_rate = 0.4
-	my_epochs = 2
+	my_epochs = 30
 	encoding_dim = 8
 	originalFile = "/media/sf_Fluidity-ubuntu/Vertify Data"# original file
 	destinationFile = "/media/sf_Fluidity-ubuntu/predict" # destination file
