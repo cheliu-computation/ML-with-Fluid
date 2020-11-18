@@ -48,7 +48,7 @@ def predict_vol(dataset, predict_num, sequence_length):
 
 	print(np.max(dataset),np.min(dataset), np.mean(dataset), np.median(dataset))
 
-	encoder = load_model('vel_encoder.h5', compile = False) # encoder verified data
+	encoder = load_model('vel_encoder(AE-64).h5', compile = False) # encoder verified data
 	code = encoder.predict(dataset) # dimension with verified data after scaled
 
 	print(np.max(code),np.min(code),np.mean(code), np.median(code), code.shape)
@@ -57,7 +57,7 @@ def predict_vol(dataset, predict_num, sequence_length):
 	outputs = predict_sequences_multiple(LSTM, code, sequence_length, predict_num)
 	print(np.max(outputs),np.min(outputs),np.mean(outputs), np.median(outputs), outputs.shape)
 
-	decoder = load_model('vel_decoder.h5', compile = False) # decoder predicted data
+	decoder = load_model('vel_decoder(AE-64).h5', compile = False) # decoder predicted data
 	predicted_vol = decoder.predict(outputs)
 	print(np.max(predicted_vol),np.min(predicted_vol),np.mean(predicted_vol), np.median(predicted_vol))
 
