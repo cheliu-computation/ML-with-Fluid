@@ -21,8 +21,8 @@ def variable_value():
 
 	path =  "/media/sf_Fluidity-ubuntu/circledata"
 	vertify_rate = 0.4
-	my_epochs = 30
-	encoding_dim = 8
+	my_epochs = 100
+	encoding_dim = 64
 	originalFile = "/media/sf_Fluidity-ubuntu/Vertify Data"# original file
 	destinationFile = "/media/sf_Fluidity-ubuntu/predict" # destination file
 
@@ -75,20 +75,20 @@ def ae_vol(vol, my_epochs, encoding_dim):# dim = 3
 	# reduce_lr = LearningRateScheduler(scheduler)
 
 	# history = autoencoder.fit(x_train, x_train, epochs=my_epochs, batch_size=128,  callbacks=[reduce_lr], validation_split=0.2)
-	history = autoencoder.fit(x_train, x_train, epochs=my_epochs, batch_size=160, validation_split=0.1)
+	history = autoencoder.fit(x_train, x_train, epochs=my_epochs, batch_size=64, validation_split=0.1)
 
 	Pcd.draw_acc_loss(history)
 
-	encoder.save('vel_encoder.h5') 
-	autoencoder.save('vel_ae.h5')
-	decoder.save('vel_decoder.h5')
+	encoder.save('vel_encoder(AE-64).h5') 
+	autoencoder.save('vel_ae(AE-64).h5')
+	decoder.save('vel_decoder(AE-64).h5')
 
 	print("ae-model train succeed")  
 
 def train_vol(vol):
 	my_epochs, encoding_dim = variable_value()[2],variable_value()[3]
 
-	if not os.path.exists('vol_encoder.h5'):
+	if not os.path.exists('vol_encoder(AE-64).h5'):
 		ae_vol(vol, my_epochs, encoding_dim)
 
 
@@ -115,7 +115,7 @@ if __name__=="__main__":
 	scaler_ver = MinMaxScaler()
 	scaler_vertify = scaler_ver.fit_transform(vertify)
 
-	autoencoder = load_model('vel_ae.h5', compile=False)
+	autoencoder = load_model('vel_ae(AE-64).h5', compile=False)
 	outpus  = autoencoder.predict(scaler_vertify)
 
 	scaler_outpus = scaler_ver.inverse_transform(outpus)
