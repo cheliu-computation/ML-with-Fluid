@@ -25,7 +25,7 @@ def variable_value():  # define parameter
 	vertify_rate = 0.4
 	sequence_length = 20
 	LSTM_rate = 0.8
-	LSTM_epochs = 50
+	LSTM_epochs = 100
 
 	return path, vertify_rate, sequence_length, LSTM_rate, LSTM_epochs
 
@@ -129,8 +129,8 @@ def LSTM_velocity(train, test, LSTM_epochs, sequence_length):
 
 	# model structure
 	model = Sequential() # import layer by layer model
-	model.add(LSTM(50, return_sequences=True, kernel_regularizer='l1')) # add a layer with 50 neurons, type is lstm
-	model.add(LSTM(100, kernel_regularizer='l1', return_sequences=False, ))
+	model.add(LSTM(50, return_sequences=True, kernel_regularizer='l2')) # add a layer with 50 neurons, type is lstm
+	model.add(LSTM(100, kernel_regularizer='l2', return_sequences=False, ))
 	model.add(Dense(trainX.shape[2]))  # full connected layer， input dimension = third axis of trainX
 
 	# compile model
@@ -141,13 +141,16 @@ def LSTM_velocity(train, test, LSTM_epochs, sequence_length):
 	# print(np.shape(trainY[0:1,:]))
 	# print(np.shape(testX))
 
-	ensemble_sample = 8
+	ensemble_sample = 64
 
-	H = np.zeros((8,8)) # H matrix follow the number of autoencoder
+	H = np.zeros((64,64)) # H matrix follow the number of autoencoder
 	np.fill_diagonal(H,1)
 
-	unit_V = np.ones((8, 1))
-	unit_M = (unit_V * np.transpose(unit_V)) / ensemble_sample
+	# modified part
+	# unit_V = np.ones((64, 1))
+	# unit_M = (unit_V) / ensemble_sample
+	# modified part
+
 
 	#in this part, predicted_data = X, observed_data = D
 	# train model
@@ -156,28 +159,42 @@ def LSTM_velocity(train, test, LSTM_epochs, sequence_length):
 		history = model.fit(trainX[i:i+1,:,:], trainY[i:i+1,:], epochs=LSTM_epochs, batch_size=1, validation_data = (testX,testY),verbose = 2)
 		
 		predicted_data = np.array(model.predict(trainX[i:i+1,:,:])) # 1 row - multiple column data
-		tem_data = trainX[i, sequence_length-(ensemble_sample + 1): sequence_length-2, :]
 
-		predicted_data = np.vstack((tem_data, predicted_data)) # mult-row mult-column matrix
+		# modified part
+		# tem_data = trainX[i+1, sequence_length- ensemble_sample- 1: sequence_length- 2, :]
+
+
+		# predicted_data = np.vstack((tem_data, predicted_data)) # mult-row mult-column matrix
+		# modified part
 
 		if i < len(trainX) - 1:
-			observed_data = trainX[i+1, sequence_length-(ensemble_sample + 2):sequence_length-2, :] # 5 previous time step sample state (3D-data)
+			# modified part
+			# observed_data = trainX[i+1, sequence_length- ensemble_sample- 1: sequence_length-1, :] # 5 previous time step sample state (3D-data)
+			# modified part
+			observed_data = trainX[i+1, -1, :]
+
+			predicted_data = predicted_data.T
+			observed_data = observed_data.T
 			
-			
+			observed_data = np.reshape(observed_data, (observed_data.shape[0], 1))
+
 			R = (observed_data.dot(np.transpose(observed_data)))/(ensemble_sample - 1) # sample co-variance
 			
-
-			A = predicted_data - predicted_data.dot(unit_M)
+			# modified part
+			# A = predicted_data - predicted_data.dot(unit_M)
+			# modified part
+			A = predicted_data - (predicted_data/ensemble_sample)
 			C = (A.dot(np.transpose(A)))/ (ensemble_sample - 1)
+
 			# print(np.shape(predicted_data))
 			# print(np.shape(C))
 			# print(np.shape(H))
 			# print(np.shape(R))
-			# print(np.shape(observed_data))
+			
 
-			assimlated_data = predicted_data + C.dot(H) * inv(H.dot(C) * H + R) * (observed_data- H.dot(predicted_data))
-
-			trainX[i+1: i+2, sequence_length-(ensemble_sample + 2):sequence_length-2, :] = assimlated_data # update
+			assimlated_data = predicted_data + C.dot(H).dot(inv(H.dot(C).dot(H) + R).dot((observed_data- H.dot(predicted_data))))
+			assimlated_data = assimlated_data.T
+			trainX[i+1: i+2, -1, :] = assimlated_data # update
 
 
 
@@ -186,7 +203,7 @@ def LSTM_velocity(train, test, LSTM_epochs, sequence_length):
 
 	#history = model.fit(trainX, trainY, epochs=LSTM_epochs, batch_size=10, validation_data = (testX,testY),verbose = 2)
 	
-	model.save('vel_lstm.h5')
+	model.save('vel_lstm(ENKF).h5')
 	
 	testYPredict = model.predict(testX)
 	
@@ -198,7 +215,7 @@ def train_velocity_model(velocity):
 
 	path, vertify_rate, sequence_length, LSTM_rate, LSTM_epochs = variable_value()
 
-	if not os.path.exists('vel_lstm.h5'):
+	if not os.path.exists('vel_lstm(ENKF).h5'):
 		encoder_model = '/media/sf_Fluidity-ubuntu/lstm-ae/vel_encoder.h5'
 		train, test = process_code_for_LSTM(velocity, encoder_model, sequence_length, LSTM_rate)
 		LSTM_velocity(train, test, LSTM_epochs, sequence_length)
