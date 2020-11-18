@@ -32,14 +32,14 @@ def get_vol_data(path, vtu_num):
 		vel = veli if n==0 else np.vstack((vel,veli))
 	w = vel[:,int(vel.shape[1]/3)*2:]
 	outputs = vel[:,:int(vel.shape[1]/3)*2] if np.all(w) == 0 else vel
-	np.save('Velocity.npy',outputs)
+	np.save('Velocity(AE-64).npy',outputs)
 	
 	return outputs
 
 def get_data(path):
 
 	vtu_num = get_vtu_num(path)
-	vol_fraction = np.load('Velocity.npy') if os.path.exists('Velocity.npy') else get_vol_data(path, vtu_num)
+	vol_fraction = np.load('Velocity(AE-64).npy') if os.path.exists('Velocity(AE-64).npy') else get_vol_data(path, vtu_num)
 
 	return vol_fraction
 
