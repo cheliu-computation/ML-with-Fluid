@@ -154,6 +154,7 @@ def LSTM_velocity(train, test, LSTM_epochs, sequence_length):
 
 	#in this part, predicted_data = X, observed_data = D
 	# train model
+	# ENKF part
 	for i in range(len(trainX)-1):
 		print(i)
 		history = model.fit(trainX[i:i+1,:,:], trainY[i:i+1,:], epochs=LSTM_epochs, batch_size=1, validation_data = (testX,testY),verbose = 2)
@@ -197,7 +198,7 @@ def LSTM_velocity(train, test, LSTM_epochs, sequence_length):
 			trainX[i+1: i+2, -1, :] = assimlated_data # update
 
 
-
+	#ENKF part finish
 	# draw_acc_loss(history)
 
 
