@@ -32,7 +32,8 @@ def variable_value():
 
 
 def ae_vol(vol, my_epochs, encoding_dim):# dim = 3
-
+	## shallow network: input--hidden--code-hidden-output
+	
 	input_img = Input(shape=(vol.shape[1], ))
 	# encoded = Dense(encoding_dim * 32, activation='relu')(input_img)
 	# encoded = Dense(encoding_dim * 8, activation='relu')(encoded)
