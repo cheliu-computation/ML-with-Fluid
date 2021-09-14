@@ -7,8 +7,13 @@ from keras.models import Model, Sequential, load_model
 from numpy.linalg import inv
 
 
-## for 1D input data
-def EnKF(input_dim, percentage_H_matrix, batch_size, LSTM_epochs, train_input, train_validation, test_input, test_validation, model_name):
+# reference of calculation part
+# A Brief Tutorial on the Ensemble Kalman Filter -- Jan Mandel
+# A Two-Stage Ensemble Kalman Filter -- Craig J. Johns† Jan Mandel
+
+# ROM enkf
+# the assimilation procedure with be executed on each batch
+def EnKF(input_dim, percentage_H_matrix, batch_size, LSTM_epochs, train_input, train_ground_truth, model_name):
 #EnKF part start
 	ensemble_sample = input_dim # smaller than input_dim
 
@@ -26,7 +31,7 @@ def EnKF(input_dim, percentage_H_matrix, batch_size, LSTM_epochs, train_input, t
 	# train model
 	# ENKF part
 	for i in range(len(indice) - 2):
-		history = model_name.fit(train_input[indice[i] : indice[i+1], :, :], train_validation[indice[i] : indice[i+1], :], 
+		history = model_name.fit(train_input[indice[i] : indice[i+1], :, :], train_ground_truth[indice[i] : indice[i+1], :], 
 			epochs=LSTM_epochs, batch_size=batch_size, verbose = 2, shuffle=False)
 		
 		predicted_data = np.array(model_name.predict(train_input[indice[i+1]: indice[i+1]+1 , :, :])) # 1 row - multiple column data
@@ -47,11 +52,9 @@ def EnKF(input_dim, percentage_H_matrix, batch_size, LSTM_epochs, train_input, t
 			
 			A = predicted_data[:ensemble_sample, :] - (predicted_data[:ensemble_sample, :]/ensemble_sample)
 			C = (A.dot(np.transpose(A)))/ (ensemble_sample - 1)
-
-			# print(predicted_data.shape, C.shape, H.shape, R.shape, observed_data.shape)
-			# print((H))
+			
 			EnKF_gain = np.zeros((predicted_data.shape[0], predicted_data.shape[1]))
-			#inverse has singular value??
+			
 			Temp_gain = C.dot(H.T).dot(inv(H.dot(C).dot(H.T) + R)).dot(observed_data- H.dot(predicted_data[:ensemble_sample, :]))
 
 			EnKF_gain[:Temp_gain.shape[0],:Temp_gain.shape[1]] = Temp_gain
@@ -63,7 +66,9 @@ def EnKF(input_dim, percentage_H_matrix, batch_size, LSTM_epochs, train_input, t
 	return model_name
 	#ENKF part finish
 
-def ENKF_raw(input_dim, percentage_H_matrix, batch_size, LSTM_epochs, train_input, train_validation, test_input, test_validation, model_name, raw_data):
+# full model enkf
+# the assimilation procedure with be executed on each batch
+def ENKF_raw(input_dim, percentage_H_matrix, batch_size, LSTM_epochs, train_input, train_ground_truth, model_name, raw_data):
 #EnKF part start
 	# train_input dimension = raw_data dimension
 	# workflow: train-->output-->convert from code to raw dimension
@@ -91,7 +96,7 @@ def ENKF_raw(input_dim, percentage_H_matrix, batch_size, LSTM_epochs, train_inpu
 	# train model
 	# ENKF part
 	for i in range(len(indice) - 2):
-		history = model_name.fit(train_input[indice[i] : indice[i+1], :, :], train_validation[indice[i] : indice[i+1], :], 
+		history = model_name.fit(train_input[indice[i] : indice[i+1], :, :], train_ground_truth[indice[i] : indice[i+1], :], 
 			epochs=LSTM_epochs, batch_size=batch_size,verbose = 1)
 		
 		predicted_data = np.array(model_name.predict(train_input[indice[i+1]: indice[i+1]+1 , :, :])) # 1 row - multiple column data
@@ -114,9 +119,7 @@ def ENKF_raw(input_dim, percentage_H_matrix, batch_size, LSTM_epochs, train_inpu
 			
 			A = data_raw_dimension[:ensemble_sample, :] - (data_raw_dimension[:ensemble_sample, :]/ensemble_sample)
 			C = (A.dot(np.transpose(A)))/ (ensemble_sample - 1)
-
-			# print(predicted_data.shape, C.shape, H.shape, R.shape, observed_data.shape)
-			# print((H))
+			
 			EnKF_gain = np.zeros((data_raw_dimension.shape[0], data_raw_dimension.shape[1]))
 			
 			Temp_gain = C.dot(H.T).dot(inv(H.dot(C).dot(H.T) + R)).dot(observed_data- H.dot(data_raw_dimension[:ensemble_sample, :]))
