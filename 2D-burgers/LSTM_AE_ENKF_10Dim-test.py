@@ -151,7 +151,7 @@ def LSTM_velocity(train, test, LSTM_epochs, sequence_length):
 	# ------------------#
 	# full model enkf
 	# fluidity_data = np.load('fluidity_data_ENKF.npy')
-	# model = EnKF.ENKF_raw(fluidity_data.shape[1]//2, 0.8, 64, LSTM_epochs, trainX, trainY, testX, testY, model, fluidity_data)
+	# model = EnKF.ENKF_raw(fluidity_data.shape[1]//2, 0.8, 64, LSTM_epochs, trainX, trainY, model, fluidity_data)
 	# ------------------#
 	# ROM enkf
 	model = EnKF.EnKF(10, 0.8, 4, LSTM_epochs, trainX, trainY, model)
