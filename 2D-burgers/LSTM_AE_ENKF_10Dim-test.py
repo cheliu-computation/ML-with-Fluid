@@ -145,27 +145,21 @@ def LSTM_velocity(train, test, LSTM_epochs, sequence_length):
 	model.add(Dense(trainX.shape[2]))  # full connected layer， input dimension = third axis of trainX
 
 	# compile model
-	step = tf.Variable(0, trainable=False)
-	boundaries = [500, 800]
-	values = [0.002, 0.001, 0.0005]
-	learning_rate_fn = schedules.PiecewiseConstantDecay(boundaries, values)
-	learning_rate = learning_rate_fn(step)
-
-	opt = optimizers.Adam(learning_rate=learning_rate)
 	model.compile(loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
 	
-	#EnKF part start
+	
+	# ------------------#
+	# full model enkf
 	# fluidity_data = np.load('fluidity_data_ENKF.npy')
 	# model = EnKF.ENKF_raw(fluidity_data.shape[1]//2, 0.8, 64, LSTM_epochs, trainX, trainY, testX, testY, model, fluidity_data)
 	# ------------------#
-	model = EnKF.EnKF(10, 0.8, 4, LSTM_epochs, trainX, trainY, testX, testY, model)
-
-	#ENKF part finish
-	
-
-
+	# ROM enkf
+	model = EnKF.EnKF(10, 0.8, 4, LSTM_epochs, trainX, trainY, model)
+	# ------------------#
+	# no enkf
 	# model.fit(trainX, trainY, epochs=LSTM_epochs, batch_size=4,shuffle=False)
-	# draw_acc_loss(history)
+	
+	
 	model.save('lstm.h5')
 	
 	# testYPredict = model.predict(testX)
